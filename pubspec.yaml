@@ -1,7 +1,7 @@
 name: otel_google_sign_in
-description: OpenTelemetry instrumentation for `package:google_sign_in`.
-  Wraps Google Sign-In auth flows with `auth.*` semconv spans.
-version: 0.1.0-beta.1-wip
+description: OpenTelemetry instrumentation for package:google_sign_in.
+  Traces Google Sign-In auth flows with auth spans and enduser.id.
+version: 0.1.0-wip
 repository: https://github.com/dartastic/otel_google_sign_in
 homepage: https://dartastic.io
 
@@ -10,11 +10,11 @@ environment:
   flutter: ">=3.0.0"
 
 dependencies:
-  dartastic_opentelemetry: ^1.1.0-beta.4
-  dartastic_opentelemetry_api: ^1.0.0-beta.6
+  dartastic_opentelemetry: ^1.1.0-beta.12
+  dartastic_opentelemetry_api: ^1.0.0-rc.1
   flutter:
     sdk: flutter
-  google_sign_in: ^6.0.0
+  google_sign_in: ^7.0.0
 
 dev_dependencies:
   dart_flutter_team_lints: ^3.5.2

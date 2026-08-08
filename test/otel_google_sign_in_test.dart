@@ -83,5 +83,37 @@ void main() {
       });
       expect(exporter.spans, isEmpty);
     });
+
+    test('runWithoutGoogleSignInInstrumentation (sync) bypasses spans',
+        () async {
+      final future = runWithoutGoogleSignInInstrumentation(
+        () => tracedGoogleSignInCall<void>(
+          operation: 'sign_out',
+          invoke: () async {},
+        ),
+      );
+      await future;
+      expect(exporter.spans, isEmpty);
+    });
+
+    test('result value passes through unchanged', () async {
+      final result = await tracedGoogleSignInCall<int>(
+        operation: 'attempt_lightweight_authentication',
+        invoke: () async => 42,
+      );
+      expect(result, equals(42));
+      expect(
+        exporter.spans.single.name,
+        equals('google_sign_in attempt_lightweight_authentication'),
+      );
+    });
+  });
+
+  group('GoogleSignInSemantics', () {
+    test('pins the wire-format attribute keys', () {
+      expect(GoogleSignInSemantics.authSystem.key, equals('auth.system'));
+      expect(GoogleSignInSemantics.authOperation.key, equals('auth.operation'));
+      expect(GoogleSignInSemantics.authProvider.key, equals('auth.provider'));
+    });
   });
 }

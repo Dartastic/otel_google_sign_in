@@ -4,5 +4,6 @@
 /// OpenTelemetry instrumentation for `package:google_sign_in`.
 library;
 
+export 'src/google_sign_in_semantics.dart';
 export 'src/google_sign_in_suppression.dart';
 export 'src/otel_google_sign_in.dart';

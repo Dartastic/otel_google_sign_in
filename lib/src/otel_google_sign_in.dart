@@ -4,24 +4,26 @@
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'google_sign_in_semantics.dart';
 import 'google_sign_in_suppression.dart';
 
 const _tracerName = 'otel_google_sign_in';
 const _authSystem = 'google_sign_in';
+const _authProvider = 'google.com';
 
 Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
 
 Attributes _attrs({required String operation}) =>
     OTel.attributesFromMap(<String, Object>{
-      'auth.system': _authSystem,
-      'auth.operation': operation,
-      'auth.provider': 'google.com',
+      GoogleSignInSemantics.authSystem.key: _authSystem,
+      GoogleSignInSemantics.authOperation.key: operation,
+      GoogleSignInSemantics.authProvider.key: _authProvider,
     });
 
 /// Generic helper. Opens a CLIENT span named
 /// `google_sign_in <op>` with auth.* attributes and runs [invoke].
-/// On `GoogleSignInAccount?` results, attaches `enduser.id` when
-/// non-null (and [recordUserId] is true).
+/// On [GoogleSignInAccount] results, attaches `enduser.id` when
+/// [recordUserId] is true.
 Future<R> tracedGoogleSignInCall<R>({
   required String operation,
   required Future<R> Function() invoke,
@@ -44,7 +46,7 @@ Future<R> tracedGoogleSignInCall<R>({
   } catch (e, st) {
     span.addAttributes(OTel.attributes([
       OTel.attributeString(
-        ErrorResource.errorType.key,
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
@@ -56,31 +58,63 @@ Future<R> tracedGoogleSignInCall<R>({
   }
 }
 
-/// Traced operations on [GoogleSignIn].
+/// Traced operations on [GoogleSignIn] (v7 API).
 extension OTelGoogleSignIn on GoogleSignIn {
-  /// Traced `signIn`.
-  Future<GoogleSignInAccount?> tracedSignIn({bool recordUserId = true}) {
-    return tracedGoogleSignInCall<GoogleSignInAccount?>(
-      operation: 'sign_in',
-      invoke: signIn,
+  /// Traced `initialize`. Configuration failures (e.g. a bad
+  /// `clientId`) surface as error spans.
+  Future<void> tracedInitialize({
+    String? clientId,
+    String? serverClientId,
+    String? nonce,
+    String? hostedDomain,
+  }) {
+    return tracedGoogleSignInCall<void>(
+      operation: 'initialize',
+      invoke: () => initialize(
+        clientId: clientId,
+        serverClientId: serverClientId,
+        nonce: nonce,
+        hostedDomain: hostedDomain,
+      ),
+      recordUserId: false,
+    );
+  }
+
+  /// Traced `authenticate` (the interactive sign-in flow).
+  Future<GoogleSignInAccount> tracedAuthenticate({
+    List<String> scopeHint = const <String>[],
+    bool recordUserId = true,
+  }) {
+    return tracedGoogleSignInCall<GoogleSignInAccount>(
+      operation: 'authenticate',
+      invoke: () => authenticate(scopeHint: scopeHint),
       recordUserId: recordUserId,
     );
   }
 
-  /// Traced `signInSilently`.
-  Future<GoogleSignInAccount?> tracedSignInSilently({
+  /// Traced `attemptLightweightAuthentication`.
+  ///
+  /// Mirrors the underlying nullable-`Future` contract: when the
+  /// platform returns `null` (it will not attempt authentication),
+  /// this returns `null` and no span is recorded.
+  Future<GoogleSignInAccount?>? tracedAttemptLightweightAuthentication({
+    bool reportAllExceptions = false,
     bool recordUserId = true,
   }) {
+    final attempt = attemptLightweightAuthentication(
+      reportAllExceptions: reportAllExceptions,
+    );
+    if (attempt == null) return null;
     return tracedGoogleSignInCall<GoogleSignInAccount?>(
-      operation: 'sign_in_silently',
-      invoke: signInSilently,
+      operation: 'attempt_lightweight_authentication',
+      invoke: () => attempt,
       recordUserId: recordUserId,
     );
   }
 
   /// Traced `signOut`.
-  Future<GoogleSignInAccount?> tracedSignOut() {
-    return tracedGoogleSignInCall<GoogleSignInAccount?>(
+  Future<void> tracedSignOut() {
+    return tracedGoogleSignInCall<void>(
       operation: 'sign_out',
       invoke: signOut,
       recordUserId: false,
@@ -88,8 +122,8 @@ extension OTelGoogleSignIn on GoogleSignIn {
   }
 
   /// Traced `disconnect`.
-  Future<GoogleSignInAccount?> tracedDisconnect() {
-    return tracedGoogleSignInCall<GoogleSignInAccount?>(
+  Future<void> tracedDisconnect() {
+    return tracedGoogleSignInCall<void>(
       operation: 'disconnect',
       invoke: disconnect,
       recordUserId: false,

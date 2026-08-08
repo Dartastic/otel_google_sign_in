@@ -1,17 +1,26 @@
 # Changelog
 
-## [0.1.0-beta.1-wip]
+## [0.1.0-wip]
 
 ### Added
 
-- Extension methods on `GoogleSignIn`: `tracedSignIn`,
-  `tracedSignInSilently`, `tracedSignOut`, `tracedDisconnect`.
+- Extension methods on `GoogleSignIn` (v7 API): `tracedInitialize`,
+  `tracedAuthenticate`, `tracedAttemptLightweightAuthentication`,
+  `tracedSignOut`, `tracedDisconnect`.
   Each opens a CLIENT span named `google_sign_in <op>` with
   `auth.system=google_sign_in`, `auth.operation`,
   `auth.provider=google.com`.
-- On successful sign-in, the resulting account ID is attached as
-  `enduser.id` (opt-out via `recordUserId: false`).
+- On successful authentication, the resulting account ID is attached
+  as `enduser.id` (opt-out via `recordUserId: false`).
+- `GoogleSignInSemantics` — typed attribute keys (no `auth.*`
+  namespace exists in the semconv registry yet).
 - `tracedGoogleSignInCall<R>` — generic helper.
 - Zone-scoped suppression
   (`runWithoutGoogleSignInInstrumentation` / async variant).
-- 3 tests via the generic helper.
+
+### Changed
+
+- `google_sign_in` floor raised to `^7.0.0`; the traced surface
+  follows the v7 singleton API (`GoogleSignIn.instance`,
+  `authenticate` / `attemptLightweightAuthentication` replace the
+  removed v6 `signIn` / `signInSilently`).
