@@ -1,7 +1,7 @@
 name: otel_google_sign_in
 description: OpenTelemetry instrumentation for package:google_sign_in.
   Traces Google Sign-In auth flows with auth spans and enduser.id.
-version: 0.2.0
+version: 0.2.1-wip
 repository: https://github.com/dartastic/otel_google_sign_in
 homepage: https://dartastic.io
 
