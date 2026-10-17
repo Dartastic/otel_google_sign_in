@@ -3,7 +3,7 @@ description: >-
   OpenTelemetry instrumentation for google_sign_in by Dartastic.io. Adds
   standard OpenTelemetry observability to applications that use
   google_sign_in.
-version: 0.2.1-wip
+version: 0.2.1
 repository: https://github.com/dartastic/otel_google_sign_in
 homepage: https://dartastic.io
 
